@@ -1,18 +1,23 @@
-from flask import Flask, request, jsonify
+import io
+from flask import Flask, request, send_file
+from rembg import remove
+from PIL import Image
 
 app = Flask(__name__)
 
-@app.route('/edit-image', methods=['POST'])
-def edit_image():
+@app.route('/remove-background', methods=['POST'])
+def remove_background():
     if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
+        return 'No file uploaded', 400
     file = request.files['file']
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
+    input_image = Image.open(file)
+    output_image = remove(input_image)
     
-    # এখানে আপনি আপনার এআই মডেলের কোড যোগ করবেন যা ইমেজটিকে এডিট করবে
+    img_io = io.BytesIO()
+    output_image.save(img_io, 'PNG')
+    img_io.seek(0)
     
-    return jsonify({'message': 'Image successfully processed and edited'}), 200
+    return send_file(img_io, mimetype='image/png')
 
 if __name__ == '__main__':
     app.run(debug=True)
